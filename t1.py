@@ -14,7 +14,7 @@ map_symbol_names: Dict[str, Set[str]] = {}
 def expand(name: str) -> str:
     name = name.replace('.', ' ')
     name = name.strip()
-    name = re.sub('( |‌)+', '( |‌)', name)
+    name = re.sub('( |‌|\)|\)|-|_|\.)+', '(| |‌|\)|\)|-|_|\.)', name)
     return name
 
 
