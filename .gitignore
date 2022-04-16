@@ -133,3 +133,5 @@ dmypy.json
 .idea/inspectionProfiles/profiles_settings.xml
 .idea/inspectionProfiles/Project_Default.xml
 .vscode/launch.json
+.idea/SUT_MIR_C1.iml
+.idea/vcs.xml
