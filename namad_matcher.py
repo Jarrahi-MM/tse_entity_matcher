@@ -9,7 +9,7 @@ import pandas as pd
 bourseview_symbols_details = json.load(
     open('./bourseview_symbols_details.json'))
 map_symbol_names: Dict[str, List[str]] = {}
-events_df = pd.read_excel('./events.xlsx')
+events_df = pd.read_excel('./events.xlsx', engine='openpyxl')
 events: Dict[str, List[str]] = {}
 
 
