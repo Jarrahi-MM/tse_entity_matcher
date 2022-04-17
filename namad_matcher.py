@@ -3,15 +3,17 @@ import json
 import re
 from typing import Dict, List
 from parsi_io.modules.number_extractor import NumberExtractor
+import pandas as pd
 
 # %%
 bourseview_symbols_details = json.load(
     open('./bourseview_symbols_details.json'))
-map_symbol_names: Dict[str, Set[str]] = {}
+map_symbol_names: Dict[str, List[str]] = {}
+events_df = pd.read_excel('./events.xlsx')
+events: Dict[str, List[str]] = {}
+
 
 # %%
-
-
 def expand_name(name: str) -> str:
     name = name.strip()
     name = re.sub(r'( |‌|\(|\)|-|_|ـ|\.)+', r'(| |‌|\(|\)|-|_|ـ|\.)+', name)
@@ -22,7 +24,7 @@ def expand_term(term: str) -> str:
     term = re.sub(r'#NUM', r'(~+)', term)
     term = re.sub(r'؟', r'?', term)
     term = term.strip()
-    term = re.sub(r'( |‌|\(|\)|-|_|ـ|\.)+', r'(| |‌|\(|\)|-|_|ـ|\.)+', term)
+    term = re.sub(r'( |‌)+', r'(| |‌|\(|\)|-|_|ـ|\.)+', term)
     return term
 
 
@@ -32,7 +34,7 @@ def tag_numbers(original_text: str) -> str:
     num_list = extractor.run(original_text)
     for d in num_list:
         len = d["span"][1] - d["span"][0]
-        new_text = new_text[:d["span"][0]]+'~'*(len)+new_text[d["span"][1]:]
+        new_text = new_text[:d["span"][0]] + '~' * (len) + new_text[d["span"][1]:]
     return new_text
 
 
