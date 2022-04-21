@@ -133,7 +133,8 @@ END_WORD_LIST = [
 	'برابر'
 ]
 END_WORD_LIST_WITH_AFTER = [f'{item}{ALL_YA}?{WHITE_SPACE}' for item in END_WORD_LIST]
-AFTER_NUMBER = join_patterns(END_WORD_LIST_WITH_AFTER + [r'\W', '$'])
+# AFTER_NUMBER = join_patterns(END_WORD_LIST_WITH_AFTER + [r'\W', '$'])
+AFTER_NUMBER = join_patterns([r'\W', '$'])
 
 PATTERN_SEARCH = BEFORE_NUMBER + f'({PATTERN_ALL_NUMBER})' + AFTER_NUMBER
 

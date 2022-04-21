@@ -1,7 +1,7 @@
 import unittest
 from namad_matcher import expand_name, tag_numbers, expand_term
 import re
-from namad_matcher import events
+from namad_matcher import events_dict
 
 
 class TestStringMethods(unittest.TestCase):
@@ -23,7 +23,7 @@ class TestStringMethods(unittest.TestCase):
     def test_expand_term_1(self):
         original_text = 'جریان آغاز معاملات فزر با ۱۵.۲ واحد تاثیر مثبت بر روند صعودی بازار فرابورس اثر گذار بود.'
         tagged_text = tag_numbers(original_text)
-        regex = events['رشد سهم'][0]
+        regex = events_dict['رشد سهم'][0]
         matches = re.finditer(regex, tagged_text, re.MULTILINE)
         matches_list = []
         for matchNum, match in enumerate(matches, start=1):
@@ -35,7 +35,7 @@ class TestStringMethods(unittest.TestCase):
         # Todo سهم پاک شد، کد کتابخانه مشکل دارد
         original_text = 'برکت همین افشای ب باعث شد سه درصد مثبت شود. به خاطر همین میگم پیگیر باشید.'
         tagged_text = tag_numbers(original_text)
-        regex = events['رشد سهم'][0]
+        regex = events_dict['رشد سهم'][0]
         matches = re.finditer(regex, tagged_text, re.MULTILINE)
         matches_list = []
         for matchNum, match in enumerate(matches, start=1):
@@ -43,7 +43,7 @@ class TestStringMethods(unittest.TestCase):
         self.assertTrue(len(matches_list) == 1)
         self.assertTrue(matches_list[0] == 'سه درصد مثبت')
 
-        regex = events['اطلاعیه'][0]
+        regex = events_dict['اطلاعیه'][0]
         matches = re.finditer(regex, tagged_text, re.MULTILINE)
         matches_list = []
         for matchNum, match in enumerate(matches, start=1):
@@ -54,7 +54,7 @@ class TestStringMethods(unittest.TestCase):
     def test_expand_term_3(self):
         original_text = 'گزارش فعالیت ماهانه دوره ۱ ماهه منتهی به ۱۴۰۰/۰۹/۳۰ برای دیران منتشر شد.'
         tagged_text = tag_numbers(original_text)
-        regex = events['گزارش'][0]
+        regex = events_dict['گزارش'][0]
         matches = re.finditer(regex, tagged_text, re.MULTILINE)
         matches_list = []
         for matchNum, match in enumerate(matches, start=1):
