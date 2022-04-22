@@ -1,5 +1,5 @@
 import unittest
-from namad_matcher import expand_name, remove_complete_overlaps, tag_numbers, expand_term
+from namad_matcher import expand_name, remove_complete_overlaps, tag_numbers, expand_term, map_symbol_names
 import re
 from namad_matcher import events_dict, find
 
@@ -132,6 +132,33 @@ class TestFind(unittest.TestCase):
         self.assertTrue(results[1]['type'] == "نماد شرکت بورس")
         self.assertTrue(results[1]['symbol'] == 'دیران')
         self.assertTrue(results[1]['span'] == (57, 62))
+        
+    def test_find_6(self):
+        text='Sina Insurance is a good Insurance company!'
+        results = find(text)
+        self.assertTrue(len(results) == 1)
+        self.assertTrue(results[0]['type'] == "نماد شرکت بورس")
+        self.assertTrue(results[0]['symbol'] == 'وسین')
+        self.assertTrue(results[0]['marker'] == 'Sina Insurance')
+        
+    def test_find_7(self):
+        text=' IRO7VSNP0001 is a good Insurance company!'
+        results = find(text)
+        self.assertTrue(len(results) == 1)
+        self.assertTrue(results[0]['type'] == "نماد شرکت بورس")
+        self.assertTrue(results[0]['symbol'] == 'وسین')
+        self.assertTrue(results[0]['marker'] == 'IRO7VSNP0001')
+        
+    def test_find_8(self):
+        text='انرژی ۳  یا انرژی‌۳ یا انرژی۳ یا انرژی 3 یا انرژی‌3 یا انرژی3 خیلی خوب است.'
+        results = find(text)
+        self.assertTrue(len(results) == 6)
+        self.assertTrue(results[0]['marker'] == 'انرژی ۳')
+        self.assertTrue(results[1]['marker'] == 'انرژی‌۳')
+        self.assertTrue(results[2]['marker'] == 'انرژی۳')
+        self.assertTrue(results[3]['marker'] == 'انرژی 3')
+        self.assertTrue(results[4]['marker'] == 'انرژی‌3')
+        self.assertTrue(results[5]['marker'] == 'انرژی3')
 
 
 if __name__ == '__main__':
