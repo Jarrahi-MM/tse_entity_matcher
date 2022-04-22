@@ -111,7 +111,7 @@ class TestFind(unittest.TestCase):
         self.assertTrue(results[3]['span'] == (67, 74))
 
     def test_find_4(self):
-        text = 'برکت همین افشای ب باعث شد سهم سه درصد مثبت شود. به خاطر همین میگم پیگیر باشید.'
+        text = 'برکت همین افشای ب باعث شد سهم سه درصد مثبت شود. بخاطر همین میگم پیگیر باشید.'
         results = find(text)
         self.assertTrue(len(results) == 3)
         self.assertTrue(results[0]['type'] == "نماد")
@@ -123,7 +123,7 @@ class TestFind(unittest.TestCase):
         self.assertTrue(results[2]['span'] == (30, 42))
 
     def test_find_5(self):
-        text = 'گزارش فعالیت ماهانه دوره ۱ ماهه منتهی به ۱۴۰۰/۰۹/۳۰ برای دیران منتشر شد.'
+        text = 'گزارش فعالیت ماهانه دوره ۱ ماهه منتهی به ۱۴۰۰̸۰۹̸۳۰ برای دیران منتشر شد.'
         results = find(text)
         self.assertTrue(len(results) == 2)
         self.assertTrue(results[0]['type'] == 'گزارش')
@@ -283,7 +283,7 @@ class TestFind(unittest.TestCase):
         self.assertTrue(results[0]['symbol'] == 'شبندر')
 
     def test_find_26(self):
-        text = 'نفت قشم ولک عالیس'
+        text = 'نفت قشم ولک عالیه'
         results = find(text)
         self.assertTrue(len(results) == 1)
         self.assertTrue(results[0]['marker'] == 'نفت قشم')
