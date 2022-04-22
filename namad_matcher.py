@@ -17,6 +17,7 @@ map_symbol_regexes: Dict[str, List[Tuple[str, str]]] = {}
 # detailed_type is نماد شرکت or حق تقدم شرکت
 events_df = pd.read_excel('./events.xlsx', engine='openpyxl')
 map_event_regexes: Dict[str, List[Tuple[str, str]]] = {}
+junk_words_df = pd.read_excel('./junk_words.xlsx', engine='openpyxl')['لیست بخش‌های تکراری اسامی']
 
 
 # %%
@@ -36,6 +37,9 @@ def expand_persian_name(name: str) -> List[str]:
     name = name.strip()
     name = re.sub(r'\*', '\*', name)
     name = re.sub(f'{W1}+', f'{Y_NAKARE}?{W1}*', name)
+    for junk in junk_words_df:
+        name=name.replace(f'{W1}*{junk}', f'({W1}*{junk})?')
+        name=name.replace(f'{junk}{W1}*', f'({junk}{W1}*)?')
     return [(re.compile(f'\\b{name}{Y_NAKARE}?\\b'), 'نماد شرکت')]
 
 
@@ -43,6 +47,9 @@ def expand_persian_hagh_name(name: str) -> List[str]:
     name = name.strip()
     name = re.sub(r'\*', '\*', name)
     name = re.sub(f'{W1}+', f'{Y_NAKARE}?{W1}*', name)
+    for junk in junk_words_df:
+        name=name.replace(f'{W1}*{junk}', f'({W1}*{junk})?')
+        name=name.replace(f'{junk}{W1}*', f'({junk}{W1}*)?')
     return [(re.compile(f'\\b{HAGH}{W1}*{name}{Y_NAKARE}?\\b'), 'نماد حق تقدم شرکت'),
             (re.compile(f'\\b{name}{Y_NAKARE}?{W1}*{HAGH}\\b'), 'نماد حق تقدم شرکت')]
 
@@ -162,5 +169,3 @@ def run(text: str):
     print(dict_list)
 
 
-# Todo inke setaii haro dotaii mishe nevesht -> loghate bi arzesh
-# run("نفت قشم سهم خیلی خوبیه")

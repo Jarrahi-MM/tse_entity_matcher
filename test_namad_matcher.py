@@ -264,6 +264,30 @@ class TestFind(unittest.TestCase):
         self.assertTrue(len(results) == 1)
         self.assertTrue(results[0]['marker'] == 'انرژی ۲')
 
+    def test_find_24(self):
+        text = "سهم فولاد مبارکه بسیار عالی است و سهم فولاد مبارکه‌ی شهر اصفهان عالی است."
+        results = find(text)
+        self.assertTrue(len(results) == 2)
+        self.assertTrue(results[0]['type'] == "نماد")
+        self.assertTrue(results[0]['marker'] == 'فولاد مبارکه')
+        self.assertTrue(results[0]['symbol'] == 'فولاد')
+        self.assertTrue(results[1]['type'] == "نماد")
+        self.assertTrue(results[1]['marker'] == 'فولاد مبارکه‌ی')
+        self.assertTrue(results[1]['symbol'] == 'فولاد')
+    
+    def test_find_25(self):
+        text = 'پالایش بندرعباس دارم ببین اصن عالیه'
+        results = find(text)
+        self.assertTrue(len(results) == 1)
+        self.assertTrue(results[0]['marker'] == 'پالایش بندرعباس')
+        self.assertTrue(results[0]['symbol'] == 'شبندر')
+
+    def test_find_26(self):
+        text = 'نفت قشم ولک عالیس'
+        results = find(text)
+        self.assertTrue(len(results) == 1)
+        self.assertTrue(results[0]['marker'] == 'نفت قشم')
+
     def test_find_hagh_1(self):
         text = "من کویرح را فروختم و به کویر تبدیل کردم."
         results = find(text)
