@@ -1,10 +1,17 @@
 import unittest
-from namad_matcher import expand_name, tag_numbers, expand_term
+from namad_matcher import expand_name, remove_complete_overlaps, tag_numbers, expand_term
 import re
-from namad_matcher import events_dict
+from namad_matcher import events_dict, find
 
 
-class TestStringMethods(unittest.TestCase):
+class TestTagNumbers(unittest.TestCase):
+    def test_tag_numbers(self):
+        original_text = 'امسال سه درصد یا ۳.۱۳ درصد یا 3.13 درصد سود کسب کردم.'
+        true_tagged_text = 'امسال ~~ درصد یا ~~~~ درصد یا ~~~~ درصد سود کسب کردم.'
+        self.assertTrue(tag_numbers(original_text) == true_tagged_text)
+
+
+class TestExpansion(unittest.TestCase):
 
     def test_expand_name(self):
         regex = expand_name('نفت ( ) -- _ـ  ‌ ها')
@@ -14,11 +21,6 @@ class TestStringMethods(unittest.TestCase):
         for _, _ in enumerate(matches, start=1):
             matches_count += 1
         self.assertTrue(matches_count == 1)
-
-    def test_tag_numbers(self):
-        original_text = 'امسال سه درصد یا ۳.۱۳ درصد یا 3.13 درصد سود کسب کردم.'
-        true_tagged_text = 'امسال ~~ درصد یا ~~~~ درصد یا ~~~~ درصد سود کسب کردم.'
-        self.assertTrue(tag_numbers(original_text) == true_tagged_text)
 
     def test_expand_term_1(self):
         original_text = 'جریان آغاز معاملات فزر با ۱۵.۲ واحد تاثیر مثبت بر روند صعودی بازار فرابورس اثر گذار بود.'
@@ -33,7 +35,7 @@ class TestStringMethods(unittest.TestCase):
 
     def test_expand_term_2(self):
         # Todo سهم پاک شد، کد کتابخانه مشکل دارد
-        original_text = 'برکت همین افشای ب باعث شد سه درصد مثبت شود. به خاطر همین میگم پیگیر باشید.'
+        original_text = 'برکت همین افشای ب باعث شد سهم سه درصد مثبت شود. به خاطر همین میگم پیگیر باشید.'
         tagged_text = tag_numbers(original_text)
         regex = events_dict['رشد سهم'][0]
         matches = re.finditer(regex, tagged_text, re.MULTILINE)
@@ -61,6 +63,75 @@ class TestStringMethods(unittest.TestCase):
             matches_list.append(original_text[match.start(): match.end()])
         self.assertTrue(len(matches_list) == 1)
         self.assertTrue(matches_list[0] == 'گزارش فعالیت ماهانه')
+
+
+class TestRemoveOverlaps(unittest.TestCase):
+    def test_remove_complete_overlap_1(self):
+        cleaned_sample = remove_complete_overlaps(
+            [{"span": (0, 10)}, {"span": (0, 20)}, {"span": (2, 20)}])
+        self.assertTrue(len(cleaned_sample) == 1)
+        self.assertTrue(cleaned_sample[0]["span"] == (0, 20))
+
+    def test_remove_complete_overlap_2(self):
+        cleaned_sample = remove_complete_overlaps(
+            [{"span": (0, 10)}, {"span": (1, 8)}, {"span": (2, 9)}])
+        self.assertTrue(len(cleaned_sample) == 1)
+        self.assertTrue(cleaned_sample[0]["span"] == (0, 10))
+
+
+class TestFind(unittest.TestCase):
+    def test_find_1(self):
+        text = "فولاد مبارکه اصفهان"
+        results = find(text)
+        self.assertTrue(len(results) == 1)
+        self.assertTrue(results[0]['type'] == "نماد شرکت بورس")
+        self.assertTrue(results[0]['symbol'] == 'فولاد')
+        self.assertTrue(results[0]['span'] == (0, 19))
+
+    def test_find_2(self):
+        text = "فولاد مبارکه‌ی اصفهان"
+        results = find(text)
+        self.assertTrue(len(results) == 1)
+        self.assertTrue(results[0]['type'] == "نماد شرکت بورس")
+        self.assertTrue(results[0]['symbol'] == 'فولاد')
+        # this should be some thing else ...
+        self.assertTrue(results[0]['span'] == (0, 5))
+
+    def test_find_3(self):
+        text = 'جریان آغاز معاملات فزر با ۱۵.۲ واحد تاثیر مثبت بر روند صعودی بازار فرابورس اثر گذار بود.'
+        results = find(text)
+        self.assertTrue(len(results) == 3)
+        self.assertTrue(results[0]['type'] == "نماد شرکت بورس")
+        self.assertTrue(results[0]['symbol'] == 'فزر')
+        self.assertTrue(results[0]['span'] == (19, 22))
+        self.assertTrue(results[1]['type'] == 'رشد سهم')
+        self.assertTrue(results[1]['span'] == (26, 46))
+        self.assertTrue(results[2]['type'] == "نماد شرکت بورس")
+        self.assertTrue(results[2]['symbol'] == 'فرابورس')
+        self.assertTrue(results[2]['span'] == (67, 74))
+
+    def test_find_4(self):
+        text = 'برکت همین افشای ب باعث شد سهم سه درصد مثبت شود. به خاطر همین میگم پیگیر باشید.'
+        results = find(text)
+        self.assertTrue(len(results) == 3)
+        self.assertTrue(results[0]['type'] == "نماد شرکت بورس")
+        self.assertTrue(results[0]['symbol'] == 'برکت')
+        self.assertTrue(results[0]['span'] == (0, 4))
+        self.assertTrue(results[1]['type'] == 'اطلاعیه')
+        self.assertTrue(results[1]['span'] == (10, 17))
+        self.assertTrue(results[2]['type'] == 'رشد سهم')
+        self.assertTrue(results[2]['span'] == (30, 42))
+
+
+    def test_find_5(self):
+        text = 'گزارش فعالیت ماهانه دوره ۱ ماهه منتهی به ۱۴۰۰/۰۹/۳۰ برای دیران منتشر شد.'
+        results = find(text)
+        self.assertTrue(len(results) == 2)
+        self.assertTrue(results[0]['type'] == 'گزارش')
+        self.assertTrue(results[0]['span'] == (0, 19))
+        self.assertTrue(results[1]['type'] == "نماد شرکت بورس")
+        self.assertTrue(results[1]['symbol'] == 'دیران')
+        self.assertTrue(results[1]['span'] == (57, 62))
 
 
 if __name__ == '__main__':
