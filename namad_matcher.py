@@ -166,6 +166,6 @@ def remove_complete_overlaps(dict_list: List[Dict]) -> List[Dict]:
 
 def run(text: str):
     dict_list = find(text)
-    print(dict_list)
+    print(json.dumps(dict_list, indent=4, ensure_ascii=False).encode('utf8').decode())
 
 
