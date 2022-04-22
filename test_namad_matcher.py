@@ -94,8 +94,7 @@ class TestFind(unittest.TestCase):
         self.assertTrue(len(results) == 1)
         self.assertTrue(results[0]['type'] == "نماد شرکت بورس")
         self.assertTrue(results[0]['symbol'] == 'فولاد')
-        # this should be some thing else ...
-        self.assertTrue(results[0]['span'] == (0, 5))
+        self.assertTrue(results[0]['marker'] == 'فولاد مبارکه\u200cی اصفهان')
 
     def test_find_3(self):
         text = 'جریان آغاز معاملات فزر با ۱۵.۲ واحد تاثیر مثبت بر روند صعودی بازار فرابورس اثر گذار بود.'

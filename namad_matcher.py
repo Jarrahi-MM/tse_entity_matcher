@@ -21,7 +21,8 @@ events_dict: Dict[str, List[str]] = {}
 def expand_name(name: str) -> str:
     name = name.strip()
     name = re.sub(r'\*', '\*', name)
-    name = re.sub(r'( |‌|\(|\)|-|_|ـ|\.)+', r'(| |‌|\(|\)|-|_|ـ|\.)+', name)
+    # name = re.sub(r'( |‌|\(|\)|-|_|ـ|\.)+', r'(| |‌|\(|\)|-|_|ـ|\.)+', name)
+    name = re.sub(r'( |‌|\(|\)|-|_|ـ|\.)+', r'(یی|ی| ی|‌ی)?(| |‌|\(|\)|-|_|ـ|\.)+', name)
     return '\\b' + name + '\\b'
 
 
