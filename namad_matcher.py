@@ -12,32 +12,36 @@ bourseview_symbols_details = json.load(
     open('./bourseview_symbols_details.json'))
 rahavard_symbols_details = json.load(
     open('./rahavard_symbols_details.json'))
-map_symbol_regexes: Dict[str, List[Tuple[str,str]]] = {} # Tuple[regex_exp, detailed_type]
+# Tuple[regex_exp, detailed_type]
+map_symbol_regexes: Dict[str, List[Tuple[str, str]]] = {}
 # detailed_type is نماد شرکت or حق تقدم شرکت
 events_df = pd.read_excel('./events.xlsx', engine='openpyxl')
-map_event_regexes: Dict[str, List[Tuple[str,str]]] = {}
+map_event_regexes: Dict[str, List[Tuple[str, str]]] = {}
 
 
 # %%
-W1=r'( |‌|\(|\)|-|_|ـ|\.)'
-Y_NAKARE=r'(یی|ی| ی|‌ی)'
-HAGH=r'(ح|حق|تقدم|حق تقدم)'.replace(' ', f'{W1}*')
+W1 = r'( |‌|\(|\)|-|_|ـ|\.)'
+Y_NAKARE = r'(یی|ی| ی|‌ی)'
+HAGH = r'(ح|حق|تقدم|حق تقدم)'.replace(' ', f'{W1}*')
+
 
 def expand_name_and_hagh(name: str) -> List[str]:
     return expand_persian_name(name) + expand_persian_hagh_name(name)
+
 
 def expand_persian_name(name: str) -> List[str]:
     name = name.strip()
     name = re.sub(r'\*', '\*', name)
     name = re.sub(f'{W1}+', f'{Y_NAKARE}?{W1}*', name)
-    return [(f'\\b{name}\\b', 'نماد شرکت')]
+    return [(re.compile(f'\\b{name}\\b'), 'نماد شرکت')]
+
 
 def expand_persian_hagh_name(name: str) -> List[str]:
     name = name.strip()
     name = re.sub(r'\*', '\*', name)
     name = re.sub(f'{W1}+', f'{Y_NAKARE}?{W1}*', name)
-    return [(f'\\b{HAGH}{W1}*{name}\\b', 'نماد حق تقدم شرکت'),
-            (f'\\b{name}{W1}*{HAGH}\\b', 'نماد حق تقدم شرکت')]
+    return [(re.compile(f'\\b{HAGH}{W1}*{name}\\b'), 'نماد حق تقدم شرکت'),
+            (re.compile(f'\\b{name}{W1}*{HAGH}\\b'), 'نماد حق تقدم شرکت')]
 
 
 def expand_term(term: str) -> List[str]:
@@ -45,7 +49,7 @@ def expand_term(term: str) -> List[str]:
     term = re.sub(r'؟', r'?', term)
     term = term.strip()
     term = re.sub(r'( |‌)+', r'(| |‌|\(|\)|-|_|ـ|\.)+', term)
-    return [(term, 'اصطلاح')]  # TODO add \\b
+    return [(re.compile(term), 'اصطلاح')]  # TODO add \\b
 
 
 def tag_numbers(original_text: str) -> str:
@@ -76,7 +80,8 @@ for item in rahavard_symbols_details['asset_data_list']:
     i = item['asset']
     if i['trade_symbol'] not in map_symbol_regexes:
         map_symbol_regexes[i['trade_symbol']] = []
-    map_symbol_regexes[i['trade_symbol']].extend(expand_name_and_hagh(i['name']))
+    map_symbol_regexes[i['trade_symbol']].extend(
+        expand_name_and_hagh(i['name']))
     map_symbol_regexes[i['trade_symbol']].extend(
         expand_name_and_hagh(i['short_name']))
     map_symbol_regexes[i['trade_symbol']].extend(
@@ -107,10 +112,13 @@ def find(text: str) -> List[Dict]:
     for key in map_event_regexes.keys():
         regexes = map_event_regexes[key]
         for r in regexes:
-            matches = re.finditer(r[0], tagged_text, re.MULTILINE)
-            for matchNum, match in enumerate(matches, start=1):
+            for match in r[0].finditer(tagged_text):
                 out.append(
                     {"type": key, "marker": text[match.start(): match.end()], "span": match.span()})
+            # matches = re.finditer(r[0], tagged_text, re.MULTILINE)
+            # for matchNum, match in enumerate(matches, start=1):
+            #     out.append(
+            #         {"type": key, "marker": text[match.start(): match.end()], "span": match.span()})
     for key in map_symbol_regexes.keys():
         # search_pattern = r'(?:\W|^)' + f'(' + key + ')' + r'(?:\W|$)'
         # for match in re.compile(search_pattern).finditer(tagged_text):
@@ -119,10 +127,13 @@ def find(text: str) -> List[Dict]:
         regexes = map_symbol_regexes[key]
         for r in regexes:
             # don't use tagged text. انرژی3
-            matches = re.finditer(r[0], text, re.MULTILINE)
-            for matchNum, match in enumerate(matches, start=1):
+            for match in r[0].finditer(text):
                 out.append({"type": "نماد", "type_detailed":r[1], "symbol": key, "marker": text[match.start(
                 ): match.end()], "span": match.span()})
+            # matches = re.finditer(r[0], text, re.MULTILINE)
+            # for matchNum, match in enumerate(matches, start=1):
+            #     out.append({"type": "نماد", "type_detailed":r[1], "symbol": key, "marker": text[match.start(
+            #     ): match.end()], "span": match.span()})
     dict_list = remove_complete_overlaps(out)
     return dict_list
 
@@ -157,8 +168,6 @@ def run(text: str):
     print(dict_list)
 
 
-
 # Todo haghtaghaddom
 # Todo inke setaii haro dotaii mishe nevesht -> loghate bi arzesh
 # run("نفت قشم سهم خیلی خوبیه")
-
