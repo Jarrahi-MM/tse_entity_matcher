@@ -2,7 +2,7 @@
 import json
 import re
 from operator import itemgetter
-from typing import Dict, List
+from typing import Dict, List, Tuple
 from parsi_io.modules.number_extractor import NumberExtractor
 # changed pattern.py in parsi.io
 import pandas as pd
@@ -12,9 +12,10 @@ bourseview_symbols_details = json.load(
     open('./bourseview_symbols_details.json'))
 rahavard_symbols_details = json.load(
     open('./rahavard_symbols_details.json'))
-map_symbol_names: Dict[str, List[str]] = {}
+map_symbol_regexes: Dict[str, List[Tuple[str,str]]] = {} # Tuple[regex_exp, detailed_type]
+# detailed_type is نماد شرکت or حق تقدم شرکت
 events_df = pd.read_excel('./events.xlsx', engine='openpyxl')
-events_dict: Dict[str, List[str]] = {}
+map_event_regexes: Dict[str, List[Tuple[str,str]]] = {}
 
 
 # %%
@@ -22,18 +23,21 @@ W1=r'( |‌|\(|\)|-|_|ـ|\.)'
 Y_NAKARE=r'(یی|ی| ی|‌ی)'
 HAGH=r'(ح|حق|تقدم|حق تقدم)'.replace(' ', f'{W1}*')
 
+def expand_name_and_hagh(name: str) -> List[str]:
+    return expand_persian_name(name) + expand_persian_hagh_name(name)
+
 def expand_persian_name(name: str) -> List[str]:
     name = name.strip()
     name = re.sub(r'\*', '\*', name)
     name = re.sub(f'{W1}+', f'{Y_NAKARE}?{W1}*', name)
-    return ['\\b' + name + '\\b']
+    return [(f'\\b{name}\\b', 'نماد شرکت')]
 
 def expand_persian_hagh_name(name: str) -> List[str]:
-    x=f'(ح|حق|تقدم|حق{W1}+تقدم||)'
     name = name.strip()
     name = re.sub(r'\*', '\*', name)
     name = re.sub(f'{W1}+', f'{Y_NAKARE}?{W1}*', name)
-    return ['\\b' + name + '\\b']
+    return [(f'\\b{HAGH}{W1}*{name}\\b', 'نماد حق تقدم شرکت'),
+            (f'\\b{name}{W1}*{HAGH}\\b', 'نماد حق تقدم شرکت')]
 
 
 def expand_term(term: str) -> List[str]:
@@ -41,7 +45,7 @@ def expand_term(term: str) -> List[str]:
     term = re.sub(r'؟', r'?', term)
     term = term.strip()
     term = re.sub(r'( |‌)+', r'(| |‌|\(|\)|-|_|ـ|\.)+', term)
-    return [term]  # TODO add \\b
+    return [(term, 'اصطلاح')]  # TODO add \\b
 
 
 def tag_numbers(original_text: str) -> str:
@@ -57,42 +61,42 @@ def tag_numbers(original_text: str) -> str:
 
 # %%
 for item in bourseview_symbols_details['items']:
-    if item['symbolPouyaFa'] not in map_symbol_names:
-        map_symbol_names[item['symbolPouyaFa']] = []
-    map_symbol_names[item['symbolPouyaFa']].extend(
-        expand_persian_name(item['isin']))
-    map_symbol_names[item['symbolPouyaFa']].extend(
-        expand_persian_name(item['namePouya']))
-    map_symbol_names[item['symbolPouyaFa']].extend(
-        expand_persian_name(item['namePouyaFa']))
-    map_symbol_names[item['symbolPouyaFa']].extend(
-        expand_persian_name(item['symbolPouyaFa']))
+    if item['symbolPouyaFa'] not in map_symbol_regexes:
+        map_symbol_regexes[item['symbolPouyaFa']] = []
+    map_symbol_regexes[item['symbolPouyaFa']].extend(
+        expand_name_and_hagh(item['isin']))
+    map_symbol_regexes[item['symbolPouyaFa']].extend(
+        expand_name_and_hagh(item['namePouya']))
+    map_symbol_regexes[item['symbolPouyaFa']].extend(
+        expand_name_and_hagh(item['namePouyaFa']))
+    map_symbol_regexes[item['symbolPouyaFa']].extend(
+        expand_name_and_hagh(item['symbolPouyaFa']))
 
 for item in rahavard_symbols_details['asset_data_list']:
     i = item['asset']
-    if i['trade_symbol'] not in map_symbol_names:
-        map_symbol_names[i['trade_symbol']] = []
-    map_symbol_names[i['trade_symbol']].extend(expand_persian_name(i['name']))
-    map_symbol_names[i['trade_symbol']].extend(
-        expand_persian_name(i['short_name']))
-    map_symbol_names[i['trade_symbol']].extend(
-        expand_persian_name(i['trade_symbol']))
+    if i['trade_symbol'] not in map_symbol_regexes:
+        map_symbol_regexes[i['trade_symbol']] = []
+    map_symbol_regexes[i['trade_symbol']].extend(expand_name_and_hagh(i['name']))
+    map_symbol_regexes[i['trade_symbol']].extend(
+        expand_name_and_hagh(i['short_name']))
+    map_symbol_regexes[i['trade_symbol']].extend(
+        expand_name_and_hagh(i['trade_symbol']))
     # may be duplicate ...
 
-map_symbol_names['انرژی3'].extend(expand_persian_name('انرژی 3'))
-map_symbol_names['انرژی3'].extend(expand_persian_name('انرژی ۳'))
+map_symbol_regexes['انرژی3'].extend(expand_name_and_hagh('انرژی 3'))
+map_symbol_regexes['انرژی3'].extend(expand_name_and_hagh('انرژی ۳'))
 
-map_symbol_names['انرژی2'].extend(expand_persian_name('انرژی 2'))
-map_symbol_names['انرژی2'].extend(expand_persian_name('انرژی ۲'))
+map_symbol_regexes['انرژی2'].extend(expand_name_and_hagh('انرژی 2'))
+map_symbol_regexes['انرژی2'].extend(expand_name_and_hagh('انرژی ۲'))
 
-map_symbol_names['انرژی1'].extend(expand_persian_name('انرژی 1'))
-map_symbol_names['انرژی1'].extend(expand_persian_name('انرژی ۱'))
+map_symbol_regexes['انرژی1'].extend(expand_name_and_hagh('انرژی 1'))
+map_symbol_regexes['انرژی1'].extend(expand_name_and_hagh('انرژی ۱'))
 
 # %%
 for index, row in events_df.iterrows():
-    if row['نوع اصطلاح'] not in events_dict:
-        events_dict[row['نوع اصطلاح']] = []
-    events_dict[row['نوع اصطلاح']].extend(expand_term(row['رجکس اصلاح']))
+    if row['نوع اصطلاح'] not in map_event_regexes:
+        map_event_regexes[row['نوع اصطلاح']] = []
+    map_event_regexes[row['نوع اصطلاح']].extend(expand_term(row['رجکس اصلاح']))
 
 # %%
 
@@ -100,24 +104,24 @@ for index, row in events_df.iterrows():
 def find(text: str) -> List[Dict]:
     tagged_text = tag_numbers(text)
     out = []
-    for key in events_dict.keys():
-        regexes = events_dict[key]
+    for key in map_event_regexes.keys():
+        regexes = map_event_regexes[key]
         for r in regexes:
-            matches = re.finditer(r, tagged_text, re.MULTILINE)
+            matches = re.finditer(r[0], tagged_text, re.MULTILINE)
             for matchNum, match in enumerate(matches, start=1):
                 out.append(
                     {"type": key, "marker": text[match.start(): match.end()], "span": match.span()})
-    for key in map_symbol_names.keys():
+    for key in map_symbol_regexes.keys():
         # search_pattern = r'(?:\W|^)' + f'(' + key + ')' + r'(?:\W|$)'
         # for match in re.compile(search_pattern).finditer(tagged_text):
         #     _span_b, _span_e = match.span(1)
         #     out.append({"type": "نماد", "marker": text[_span_b: _span_e], "span": match.span(1)})
-        regexes = map_symbol_names[key]
+        regexes = map_symbol_regexes[key]
         for r in regexes:
             # don't use tagged text. انرژی3
-            matches = re.finditer(r, text, re.MULTILINE)
+            matches = re.finditer(r[0], text, re.MULTILINE)
             for matchNum, match in enumerate(matches, start=1):
-                out.append({"type": "نماد شرکت بورس", "symbol": key, "marker": text[match.start(
+                out.append({"type": "نماد", "type_detailed":r[1], "symbol": key, "marker": text[match.start(
                 ): match.end()], "span": match.span()})
     dict_list = remove_complete_overlaps(out)
     return dict_list
