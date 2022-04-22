@@ -10,6 +10,8 @@ import pandas as pd
 # %%
 bourseview_symbols_details = json.load(
     open('./bourseview_symbols_details.json'))
+rahavard_symbols_details = json.load(
+    open('./rahavard_symbols_details.json'))
 map_symbol_names: Dict[str, List[str]] = {}
 events_df = pd.read_excel('./events.xlsx', engine='openpyxl')
 events_dict: Dict[str, List[str]] = {}
@@ -53,6 +55,27 @@ for item in bourseview_symbols_details['items']:
         expand_name(item['namePouyaFa']))
     map_symbol_names[item['symbolPouyaFa']].append(
         expand_name(item['symbolPouyaFa']))
+
+for item in rahavard_symbols_details['asset_data_list']:
+    i=item['asset']
+    if i['trade_symbol'] not in map_symbol_names:
+        map_symbol_names[i['trade_symbol']] = []
+    map_symbol_names[i['trade_symbol']].append(expand_name(i['name']))
+    map_symbol_names[i['trade_symbol']].append(
+        expand_name(i['short_name']))
+    map_symbol_names[i['trade_symbol']].append(
+        expand_name(i['trade_symbol']))
+    # may be duplicate ...
+
+map_symbol_names['انرژی3'].append(expand_name('انرژی 3'))
+map_symbol_names['انرژی3'].append(expand_name('انرژی ۳'))
+
+map_symbol_names['انرژی2'].append(expand_name('انرژی 2'))
+map_symbol_names['انرژی2'].append(expand_name('انرژی ۲'))
+
+map_symbol_names['انرژی1'].append(expand_name('انرژی 1'))
+map_symbol_names['انرژی1'].append(expand_name('انرژی ۱'))
+
 # %%
 for index, row in events_df.iterrows():
     if row['نوع اصطلاح'] not in events_dict:
