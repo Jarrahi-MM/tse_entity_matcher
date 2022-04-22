@@ -1,5 +1,5 @@
 import unittest
-from namad_matcher import expand_name, remove_complete_overlaps, tag_numbers, expand_term, map_symbol_names
+from namad_matcher import expand_persian_name, remove_complete_overlaps, tag_numbers, expand_term, map_symbol_names
 import re
 from namad_matcher import events_dict, find
 
@@ -14,7 +14,7 @@ class TestTagNumbers(unittest.TestCase):
 class TestExpansion(unittest.TestCase):
 
     def test_expand_name(self):
-        regex = expand_name('نفت ( ) -- _ـ  ‌ ها')
+        regex = expand_persian_name('نفت ( ) -- _ـ  ‌ ها')
         test_str = 'نفتها'
         matches = re.finditer(regex, test_str, re.MULTILINE)
         matches_count = 0
@@ -34,7 +34,6 @@ class TestExpansion(unittest.TestCase):
         self.assertTrue(matches_list[0] == '۱۵.۲ واحد تاثیر مثبت')
 
     def test_expand_term_2(self):
-        # Todo سهم پاک شد، کد کتابخانه مشکل دارد
         original_text = 'برکت همین افشای ب باعث شد سهم سه درصد مثبت شود. به خاطر همین میگم پیگیر باشید.'
         tagged_text = tag_numbers(original_text)
         regex = events_dict['رشد سهم'][0]
@@ -159,6 +158,15 @@ class TestFind(unittest.TestCase):
         self.assertTrue(results[4]['marker'] == 'انرژی‌3')
         self.assertTrue(results[5]['marker'] == 'انرژی3')
 
+class TestFindHagh(unittest.TestCase):
+    def test_find_hagh_1(self):
+        text = "من کویرح را فروختم و به کویر تبدیل کردم."
+        results = find(text)
+        self.assertTrue(len(results) == 1)
+        self.assertTrue(results[0]['type'] == "نماد شرکت بورس")
+        self.assertTrue(results[0]['symbol'] == 'کویر')
+        self.assertTrue(results[0]['marker'] == 'کویر')
+        self.assertTrue(results[0]['span'] == (24, 28))
 
 if __name__ == '__main__':
     unittest.main()

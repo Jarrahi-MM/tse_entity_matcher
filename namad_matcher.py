@@ -18,11 +18,12 @@ events_dict: Dict[str, List[str]] = {}
 
 
 # %%
-def expand_name(name: str) -> str:
+def expand_persian_name(name: str) -> str:
     name = name.strip()
     name = re.sub(r'\*', '\*', name)
     # name = re.sub(r'( |‌|\(|\)|-|_|ـ|\.)+', r'(| |‌|\(|\)|-|_|ـ|\.)+', name)
-    name = re.sub(r'( |‌|\(|\)|-|_|ـ|\.)+', r'(یی|ی| ی|‌ی)?(| |‌|\(|\)|-|_|ـ|\.)+', name)
+    name = re.sub(r'( |‌|\(|\)|-|_|ـ|\.)+',
+                  r'(یی|ی| ی|‌ی)?(| |‌|\(|\)|-|_|ـ|\.)+', name)
     return '\\b' + name + '\\b'
 
 
@@ -49,33 +50,34 @@ def tag_numbers(original_text: str) -> str:
 for item in bourseview_symbols_details['items']:
     if item['symbolPouyaFa'] not in map_symbol_names:
         map_symbol_names[item['symbolPouyaFa']] = []
-    map_symbol_names[item['symbolPouyaFa']].append(expand_name(item['isin']))
     map_symbol_names[item['symbolPouyaFa']].append(
-        expand_name(item['namePouya']))
+        expand_persian_name(item['isin']))
     map_symbol_names[item['symbolPouyaFa']].append(
-        expand_name(item['namePouyaFa']))
+        expand_persian_name(item['namePouya']))
     map_symbol_names[item['symbolPouyaFa']].append(
-        expand_name(item['symbolPouyaFa']))
+        expand_persian_name(item['namePouyaFa']))
+    map_symbol_names[item['symbolPouyaFa']].append(
+        expand_persian_name(item['symbolPouyaFa']))
 
 for item in rahavard_symbols_details['asset_data_list']:
-    i=item['asset']
+    i = item['asset']
     if i['trade_symbol'] not in map_symbol_names:
         map_symbol_names[i['trade_symbol']] = []
-    map_symbol_names[i['trade_symbol']].append(expand_name(i['name']))
+    map_symbol_names[i['trade_symbol']].append(expand_persian_name(i['name']))
     map_symbol_names[i['trade_symbol']].append(
-        expand_name(i['short_name']))
+        expand_persian_name(i['short_name']))
     map_symbol_names[i['trade_symbol']].append(
-        expand_name(i['trade_symbol']))
+        expand_persian_name(i['trade_symbol']))
     # may be duplicate ...
 
-map_symbol_names['انرژی3'].append(expand_name('انرژی 3'))
-map_symbol_names['انرژی3'].append(expand_name('انرژی ۳'))
+map_symbol_names['انرژی3'].append(expand_persian_name('انرژی 3'))
+map_symbol_names['انرژی3'].append(expand_persian_name('انرژی ۳'))
 
-map_symbol_names['انرژی2'].append(expand_name('انرژی 2'))
-map_symbol_names['انرژی2'].append(expand_name('انرژی ۲'))
+map_symbol_names['انرژی2'].append(expand_persian_name('انرژی 2'))
+map_symbol_names['انرژی2'].append(expand_persian_name('انرژی ۲'))
 
-map_symbol_names['انرژی1'].append(expand_name('انرژی 1'))
-map_symbol_names['انرژی1'].append(expand_name('انرژی ۱'))
+map_symbol_names['انرژی1'].append(expand_persian_name('انرژی 1'))
+map_symbol_names['انرژی1'].append(expand_persian_name('انرژی ۱'))
 
 # %%
 for index, row in events_df.iterrows():
@@ -103,7 +105,8 @@ def find(text: str) -> List[Dict]:
         #     out.append({"type": "نماد", "marker": text[_span_b: _span_e], "span": match.span(1)})
         regexes = map_symbol_names[key]
         for r in regexes:
-            matches = re.finditer(r, text, re.MULTILINE) # don't use tagged text. انرژی3
+            # don't use tagged text. انرژی3
+            matches = re.finditer(r, text, re.MULTILINE)
             for matchNum, match in enumerate(matches, start=1):
                 out.append({"type": "نماد شرکت بورس", "symbol": key, "marker": text[match.start(
                 ): match.end()], "span": match.span()})
@@ -141,11 +144,8 @@ def run(text: str):
     print(dict_list)
 
 
-# run("فولاد مبارکه‌ی اصفهان")
-# run("فولاد مبارکه اصفهان")
-# run('جریان آغاز معاملات فزر با ۱۵.۲ واحد تاثیر مثبت بر روند صعودی بازار فرابورس اثر گذار بود.')
-# run('برکت همین افشای ب باعث شد سهم سه درصد مثبت شود. به خاطر همین میگم پیگیر باشید.')
-# run('گزارش فعالیت ماهانه دوره ۱ ماهه منتهی به ۱۴۰۰/۰۹/۳۰ برای دیران منتشر شد.')
+
 # Todo haghtaghaddom
 # Todo inke setaii haro dotaii mishe nevesht -> loghate bi arzesh
 # run("نفت قشم سهم خیلی خوبیه")
+
