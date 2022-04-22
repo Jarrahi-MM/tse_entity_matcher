@@ -18,21 +18,30 @@ events_dict: Dict[str, List[str]] = {}
 
 
 # %%
-def expand_persian_name(name: str) -> str:
+W1=r'( |‌|\(|\)|-|_|ـ|\.)'
+Y_NAKARE=r'(یی|ی| ی|‌ی)'
+HAGH=r'(ح|حق|تقدم|حق تقدم)'.replace(' ', f'{W1}*')
+
+def expand_persian_name(name: str) -> List[str]:
     name = name.strip()
     name = re.sub(r'\*', '\*', name)
-    # name = re.sub(r'( |‌|\(|\)|-|_|ـ|\.)+', r'(| |‌|\(|\)|-|_|ـ|\.)+', name)
-    name = re.sub(r'( |‌|\(|\)|-|_|ـ|\.)+',
-                  r'(یی|ی| ی|‌ی)?(| |‌|\(|\)|-|_|ـ|\.)+', name)
-    return '\\b' + name + '\\b'
+    name = re.sub(f'{W1}+', f'{Y_NAKARE}?{W1}*', name)
+    return ['\\b' + name + '\\b']
+
+def expand_persian_hagh_name(name: str) -> List[str]:
+    x=f'(ح|حق|تقدم|حق{W1}+تقدم||)'
+    name = name.strip()
+    name = re.sub(r'\*', '\*', name)
+    name = re.sub(f'{W1}+', f'{Y_NAKARE}?{W1}*', name)
+    return ['\\b' + name + '\\b']
 
 
-def expand_term(term: str) -> str:
+def expand_term(term: str) -> List[str]:
     term = re.sub(r'#NUM', r'(~+)', term)
     term = re.sub(r'؟', r'?', term)
     term = term.strip()
     term = re.sub(r'( |‌)+', r'(| |‌|\(|\)|-|_|ـ|\.)+', term)
-    return term  # TODO add \\b
+    return [term]  # TODO add \\b
 
 
 def tag_numbers(original_text: str) -> str:
@@ -50,40 +59,40 @@ def tag_numbers(original_text: str) -> str:
 for item in bourseview_symbols_details['items']:
     if item['symbolPouyaFa'] not in map_symbol_names:
         map_symbol_names[item['symbolPouyaFa']] = []
-    map_symbol_names[item['symbolPouyaFa']].append(
+    map_symbol_names[item['symbolPouyaFa']].extend(
         expand_persian_name(item['isin']))
-    map_symbol_names[item['symbolPouyaFa']].append(
+    map_symbol_names[item['symbolPouyaFa']].extend(
         expand_persian_name(item['namePouya']))
-    map_symbol_names[item['symbolPouyaFa']].append(
+    map_symbol_names[item['symbolPouyaFa']].extend(
         expand_persian_name(item['namePouyaFa']))
-    map_symbol_names[item['symbolPouyaFa']].append(
+    map_symbol_names[item['symbolPouyaFa']].extend(
         expand_persian_name(item['symbolPouyaFa']))
 
 for item in rahavard_symbols_details['asset_data_list']:
     i = item['asset']
     if i['trade_symbol'] not in map_symbol_names:
         map_symbol_names[i['trade_symbol']] = []
-    map_symbol_names[i['trade_symbol']].append(expand_persian_name(i['name']))
-    map_symbol_names[i['trade_symbol']].append(
+    map_symbol_names[i['trade_symbol']].extend(expand_persian_name(i['name']))
+    map_symbol_names[i['trade_symbol']].extend(
         expand_persian_name(i['short_name']))
-    map_symbol_names[i['trade_symbol']].append(
+    map_symbol_names[i['trade_symbol']].extend(
         expand_persian_name(i['trade_symbol']))
     # may be duplicate ...
 
-map_symbol_names['انرژی3'].append(expand_persian_name('انرژی 3'))
-map_symbol_names['انرژی3'].append(expand_persian_name('انرژی ۳'))
+map_symbol_names['انرژی3'].extend(expand_persian_name('انرژی 3'))
+map_symbol_names['انرژی3'].extend(expand_persian_name('انرژی ۳'))
 
-map_symbol_names['انرژی2'].append(expand_persian_name('انرژی 2'))
-map_symbol_names['انرژی2'].append(expand_persian_name('انرژی ۲'))
+map_symbol_names['انرژی2'].extend(expand_persian_name('انرژی 2'))
+map_symbol_names['انرژی2'].extend(expand_persian_name('انرژی ۲'))
 
-map_symbol_names['انرژی1'].append(expand_persian_name('انرژی 1'))
-map_symbol_names['انرژی1'].append(expand_persian_name('انرژی ۱'))
+map_symbol_names['انرژی1'].extend(expand_persian_name('انرژی 1'))
+map_symbol_names['انرژی1'].extend(expand_persian_name('انرژی ۱'))
 
 # %%
 for index, row in events_df.iterrows():
     if row['نوع اصطلاح'] not in events_dict:
         events_dict[row['نوع اصطلاح']] = []
-    events_dict[row['نوع اصطلاح']].append(expand_term(row['رجکس اصلاح']))
+    events_dict[row['نوع اصطلاح']].extend(expand_term(row['رجکس اصلاح']))
 
 # %%
 

@@ -1,5 +1,5 @@
 import unittest
-from namad_matcher import expand_persian_name, remove_complete_overlaps, tag_numbers, expand_term, map_symbol_names
+from namad_matcher import expand_persian_name, remove_complete_overlaps, tag_numbers
 import re
 from namad_matcher import events_dict, find
 
@@ -16,7 +16,7 @@ class TestExpansion(unittest.TestCase):
     def test_expand_name(self):
         regex = expand_persian_name('نفت ( ) -- _ـ  ‌ ها')
         test_str = 'نفتها'
-        matches = re.finditer(regex, test_str, re.MULTILINE)
+        matches = re.finditer(regex[0], test_str, re.MULTILINE)
         matches_count = 0
         for _, _ in enumerate(matches, start=1):
             matches_count += 1
