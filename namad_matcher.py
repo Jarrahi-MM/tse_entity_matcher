@@ -102,7 +102,7 @@ def find(text: str) -> List[Dict]:
         #     out.append({"type": "نماد", "marker": text[_span_b: _span_e], "span": match.span(1)})
         regexes = map_symbol_names[key]
         for r in regexes:
-            matches = re.finditer(r, tagged_text, re.MULTILINE)
+            matches = re.finditer(r, text, re.MULTILINE) # don't use tagged text. انرژی3
             for matchNum, match in enumerate(matches, start=1):
                 out.append({"type": "نماد شرکت بورس", "symbol": key, "marker": text[match.start(
                 ): match.end()], "span": match.span()})
@@ -115,6 +115,8 @@ def check_overlap(s1, s2):
 
 
 def remove_complete_overlaps(dict_list: List[Dict]) -> List[Dict]:
+    if len(dict_list) == 0:
+        return dict_list
     dict_list = sorted(dict_list, key=itemgetter('span'))
     prev_span = dict_list[0]['span']
     useless_indexes = []
