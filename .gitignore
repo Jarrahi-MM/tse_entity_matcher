@@ -134,3 +134,4 @@ dmypy.json
 .idea/inspectionProfiles/Project_Default.xml
 .idea/SUT_MIR_C1.iml
 .idea/vcs.xml
+.DS_Store
